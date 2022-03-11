@@ -1,179 +1,13 @@
+from platform import node
 from pip import main
 import redis
 from redisgraph import Node, Edge, Graph, Path
 
-'''
-TODO:
-    - get querying function working
-    - add more data
-    - abstract methods
-    - add flask
-'''
+from const import nodes, relationships
 
-nodes = {
-    'user:1': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:1',
-            'name': 'Roi Lipman', 
-            'age': 32, 
-            'gender': 'male', 
-            'status': 'married'
-        }
-    },
-    'user:2': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:2',
-            'name': 'Alon Fital', 
-            'age': 32, 
-            'gender': 'male', 
-            'status': 'married'
-        }
-    },
-    'user:3': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:3',
-            'name': 'Ailon Velger', 
-            'age': 32, 
-            'gender': 'male', 
-            'status': 'married'
-        }
-    },
-    'user:4': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:4',
-            'name': 'Ori Laslo', 
-            'age': 32, 
-            'gender': 'male', 
-            'status': 'married'
-        }
-    },
-    'user:5': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:5',
-            'name': 'Boaz Arad', 
-            'age': 31, 
-            'gender': 'male', 
-            'status': 'married'
-        }
-    },
-    'user:6': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:6',
-            'name': 'Omri Traub', 
-            'age': 33, 
-            'gender': 'male', 
-            'status': 'single'
-        }
-    },
-    'user:7': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:7',
-            'name': 'Tal Doron', 
-            'age': 32, 
-            'gender': 'male', 
-            'status': 'single'
-        }
-    },
-    'user:8': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:8',
-            'name': 'Lucy Yanfital', 
-            'age': 30, 
-            'gender': 'female', 
-            'status': 'married'
-        }
-    },
-    'user:9': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:9',
-            'name': 'Jane Chernomorin', 
-            'age': 31, 
-            'gender': 'female', 
-            'status': 'married'
-        }
-    },
-    'user:10': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:10',
-            'name': 'Shelly Laslo Rooz', 
-            'age': 31, 
-            'gender': 'female', 
-            'status': 'married'
-        }
-    },
-    'user:11': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:11',
-            'name': 'Valerie Abigail Arad', 
-            'age': 31, 
-            'gender': 'female', 
-            'status': 'married'
-        }
-    },
-    'user:12': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:12',
-            'name': 'Gal Derriere', 
-            'age': 26, 
-            'gender': 'male', 
-            'status': 'single'
-        }
-    },
-    'user:13': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:1',
-            'name': 'Mor Yesharim', 
-            'age': 31, 
-            'gender': 'female', 
-            'status': 'married'
-        }
-    },
-    'user:14': {
-        'label': 'person',
-        'properties': {
-            'id': 'user:1',
-            'name': 'John Doe', 
-            'age': 33, 
-            'gender': 'male', 
-            'status': 'single'
-        }
-    },
-    'country:1': {
-        'label': 'country',
-        'properties': {
-            'id': 'country:1',
-            'name': 'Japan'
-        }
-    }
-}
-
-uncommitted_nodes = {}
-
-relationships = [
-    {
-        'type': 'visited',
-        'src_node': 'user:1',
-        'src_node_type': 'person',
-        'dest_node': 'country:1',
-        'dest_node_type': 'country',
-        'properties': {
-            'purpose': 'pleasure'
-        }
-    }
-]
+# connect to redis client
+client = redis.Redis(host='localhost', port=6379)
+redis_graph = Graph('social', client)
 
 ############## GRAPH QUERIES ##############
 
@@ -189,10 +23,20 @@ def add_sample_nodes():
     global nodes, uncommitted_nodes
     for node_key in nodes.keys():
         node = nodes[node_key]
-        graph_node = Node(label=node['label'], properties=node['properties'])
-        redis_graph.add_node(graph_node)
-        uncommitted_nodes[node_key] = graph_node
+        create_record(node)
     redis_graph.commit()
+
+def create_record(node):
+    add_node_doc(node['properties'])
+    add_node_to_graph(node)
+
+def add_node_doc(properties):
+    for key in properties.keys():
+        client.hset(properties['id'], key, properties[key])
+
+def add_node_to_graph(node):
+    graph_node = Node(label=node['label'], properties=node['properties'])
+    redis_graph.add_node(graph_node)
 
 def add_sample_edges():
     global relationships
@@ -225,10 +69,6 @@ def add_nodes_with_relationship(src_node, dest_node, relationship_type, relation
 ################# HELPERS ##################
 
 if __name__ == "__main__":
-    # connect to redis client
-    client = redis.Redis(host='localhost', port=6379)
-    redis_graph = Graph('social', client)
-
     # load data into graph
     add_sample_nodes()
     add_sample_edges()
@@ -272,4 +112,4 @@ if __name__ == "__main__":
 
 
     # IF WANTED – DELETE GRAPH
-    redis_graph.delete()
+    # redis_graph.delete()
