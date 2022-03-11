@@ -1,5 +1,7 @@
 from platform import node
+
 from pip import main
+
 import redis
 from redisgraph import Node, Edge, Graph, Path
 
@@ -20,7 +22,7 @@ def find_node_with_id(id:str):
 
 ############# GRAPH MUTATIONS #############
 def add_sample_nodes():
-    global nodes, uncommitted_nodes
+    global nodes
     for node_key in nodes.keys():
         node = nodes[node_key]
         create_record(node)
@@ -42,7 +44,6 @@ def add_sample_edges():
     global relationships
     for relationship in relationships:
         add_relationship_to_nodes(relationship, True)   
-    redis_graph.commit() 
 
 def add_relationship_to_nodes(relationship, relationship_has_property):
     src_node_type = relationship['src_node_type']
