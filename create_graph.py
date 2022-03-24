@@ -89,11 +89,10 @@ def add_nodes_with_relationship(src_node, dest_node, relationship_type, relation
 ################# HELPERS ##################
 
 if __name__ == "__main__":
-    # load data into graph
+    # delete nodes before loading
+    client.flushall()
+
     add_sample_nodes()
     add_sample_edges()
 
     find_people_who_visited_country('USA', None)
-
-    # IF WANTED – DELETE GRAPH
-    # redis_graph.delete()
