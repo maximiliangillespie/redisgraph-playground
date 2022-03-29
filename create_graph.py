@@ -9,7 +9,7 @@ from const import nodes, relationships
 
 # connect to redis client
 client = redis.Redis(host='localhost', port=6379)
-redis_graph = Graph('social', client)
+redis_graph = Graph('linkedin', client)
 
 ############## GRAPH QUERIES ##############
 
@@ -62,7 +62,7 @@ def add_node_to_graph(node):
 def add_sample_edges():
     global relationships
     for relationship in relationships:
-        add_relationship_to_nodes(relationship, True)   
+        add_relationship_to_nodes(relationship, True)
 
 def add_relationship_to_nodes(relationship, relationship_has_property):
     src_node_type = relationship['src_node_type']
